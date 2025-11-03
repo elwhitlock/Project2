@@ -29,8 +29,43 @@ mobile_data <- read_csv("user_behavior_dataset.csv") |>
         gender = as.factor(gender),
         behavior_class = factor(behavior_class,
         levels = c(1, 2, 3, 4, 5),
+        # based on source of data ranges from light to extreme
         labels = c("Light", "Light to Moderate", "Moderate", "Moderate to Extreme", "Extreme")
     )
   )
 
+# validate our data read in as desired
+glimpse(mobile_data)
+colSums(is.na(mobile_data))
+
+# numeric variable summary grouped by gender
+num_summary <- mobile_data |>
+  group_by(gender)|>
+  summarize(across(where(is.numeric), list(mean = mean, sd = sd, min = min, max = max)))
+num_summary
+
+# box plot of screen time grouped by operating system
+ggplot(mobile_data, aes(x=op_system, y = screen_on, fill = op_system)) +
+  geom_boxplot() +
+  labs(title = "Boxplot of Screen on Time by Operating System", x = "Operatng System", y = "Screen on Time (hours/day)")
+
+# box plot of app usage grouped by operating system
+ggplot(mobile_data, aes(x=op_system, y = app_usage, fill = op_system)) +
+  geom_boxplot() +
+  labs(title = "Boxplot of App Usage Time by Operating System", x = "Operatng System", y = "App Usage Time (min/day)")
+
+
+# categorical counts via one way tables
+n_gender <- table(mobile_data$gender)
+n_gender
+
+n_behavior <- table(mobile_data$behavior_class)
+n_behavior
+
+n_system <- table(mobile_data$op_system)
+n_system
+
+# two way tables
+n_system_gender <- table(mobile_data$op_system, mobile_data$gender)
+n_system_gender
 
