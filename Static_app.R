@@ -27,8 +27,7 @@ mobile_data <- read_csv("user_behavior_dataset.csv") |>
         device_model = as.factor(device_model),
         op_system = as.factor(op_system),
         gender = as.factor(gender),
-        behavior_class = factor(
-        behavior_class,
+        behavior_class = factor(behavior_class,
         levels = c(1, 2, 3, 4, 5),
         labels = c("Light", "Light to Moderate", "Moderate", "Moderate to Extreme", "Extreme")
     )
