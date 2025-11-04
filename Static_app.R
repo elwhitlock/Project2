@@ -5,6 +5,7 @@
 
 # packages needed
 library("tidyverse")
+library("hexbin")
 
 # read in data (mobile device usage)
 # rename column names
@@ -39,20 +40,36 @@ glimpse(mobile_data)
 colSums(is.na(mobile_data))
 
 # numeric variable summary grouped by gender
-num_summary <- mobile_data |>
+num_summary_g <- mobile_data |>
   group_by(gender)|>
   summarize(across(where(is.numeric), list(mean = mean, sd = sd, min = min, max = max)))
-num_summary
+num_summary_g
+
+# numeric variable summary grouped by behavior class
+num_summary_b <- mobile_data |>
+  group_by(behavior_class)|>
+  summarize(across(where(is.numeric), list(mean = mean, sd = sd, min = min, max = max)))
+num_summary_b
 
 # box plot of screen time grouped by operating system
 ggplot(mobile_data, aes(x=op_system, y = screen_on, fill = op_system)) +
   geom_boxplot() +
-  labs(title = "Boxplot of Screen on Time by Operating System", x = "Operatng System", y = "Screen on Time (hours/day)")
+  scale_fill_manual(
+    name = "Operating System",
+    values = c("iOS" = "blue", "Android" = "green")) +
+  labs(title = "Boxplot of Screen on Time by Operating System", 
+       x = "Operatng System", 
+       y = "Screen on Time (hours/day)")
 
 # box plot of app usage grouped by operating system
 ggplot(mobile_data, aes(x=op_system, y = app_usage, fill = op_system)) +
   geom_boxplot() +
-  labs(title = "Boxplot of App Usage Time by Operating System", x = "Operatng System", y = "App Usage Time (min/day)")
+  scale_fill_manual(
+    name = "Operating System",
+    values = c("iOS" = "blue", "Android" = "green")) +
+  labs(title = "Boxplot of App Usage Time by Operating System", 
+       x = "Operatng System", 
+       y = "App Usage Time (min/day)")
 
 
 # categorical counts via one way tables
@@ -68,4 +85,65 @@ n_system
 # two way tables
 n_system_gender <- table(mobile_data$op_system, mobile_data$gender)
 n_system_gender
+
+n_behavior_gender <- table(mobile_data$behavior_class, mobile_data$gender)
+n_behavior_gender
+
+# Plots
+
+# plot 1, scatter plot number of apps vs app usage time
+ggplot(mobile_data, aes(x = num_apps, y = app_usage, color = gender)) +
+  geom_jitter() +
+  scale_color_manual(
+    name = "Gender",
+    values = c("Female" = "pink", "Male" = "lightblue")) +
+  labs(title = "Number of Apps Installed vs App Usage Time", 
+       x = "Number of Apps Installed", 
+       y = "App Usage Time (min/day)")
+
+# plot 2, same plot as above with faceting used for device model
+ggplot(mobile_data, aes(x = num_apps, y = app_usage, color = gender)) +
+  geom_jitter() +
+  scale_color_manual(
+    name = "Operating System",
+    values = c("iOS" = "blue", "Android" = "green")) +
+  labs(title = "Number of Apps Installed vs App Usage Time Faceted by Device Model", 
+       x = "Number of Apps Installed", 
+       y = "App Usage Time (min/day)")
+
+# plot 3, density plot age by operating system
+ggplot(mobile_data, aes(x = age, fill = op_system)) +
+  geom_density(alpha = 0.5) +
+  scale_fill_manual(
+    name = "Gender",
+    values = c("Female" = "pink", "Male" = "lightblue")) +
+  labs(title = "Density of age by Operating System",
+       x = "Age", 
+       y = "Density")
+
+
+# plot 4, bar chart of device model by behavior class
+ggplot(mobile_data, aes(x = device_model, fill = behavior_class)) +
+  geom_bar() +
+  # I referenced outside documentation to create a gradient
+  scale_fill_brewer(palette = "Reds", name = "Behavior Class") +
+  labs(title = "Bar Chart of Device Model by User Behavior Class",
+       x = "Device Model",
+       y = "Count")
+
+# plot 5 violin plots of screen time
+ggplot(mobile_data, aes(x = behavior_class, y = age)) +
+  geom_violin(fill = "lightyellow") +
+  labs(title = "Distribution of Screen Time by Behavior Class",
+       x = "Behavior Class",
+       y = "Age")
+
+# plot 6 Hexbin NEW (did not cover in class) battery drain vs data usage,
+ggplot(mobile_data, aes(x = battery_drain, y = data_usage)) +
+  geom_hex() +
+  geom_hex(bins = 18) +
+  scale_fill_gradient(low = "lightblue", high = "darkblue") +
+  labs(title = "Hexbin Plot of Battery Drain vs Data Usage",
+       x = "Battery Drain (mAh/day)",
+       y = "Data Usage (MB/day)") 
 
