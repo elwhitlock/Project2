@@ -19,11 +19,13 @@ ui <- fluidPage(
       h2("Select how you want to subset the data"),
       selectInput("gender_select", label = "Select gender",
                   choices = c("Both", 
-                              unique(mobile_data$gender)),
+                              "Female",
+                              "Male"),
                   selected = "Both"),
       selectInput("syst_select", label = "Select operating system",
                   choices = c("Both", 
-                              unique(mobile_data$op_system)),
+                              "Android",
+                              "iOS"),
                   selected = "Both"), 
       h2("Choose the first numeric variable to summarize on"),
       radioButtons("num_var1",
@@ -34,7 +36,7 @@ ui <- fluidPage(
                                     "Number of Apps Installed",
                                     "Data Usage (MB/day)",
                                     "Age"),
-                   choiceValues = numeric_vars,
+                   choiceValues = num_vars,
                    selected = "app_usage"),
       h2("Subset on your first numeric variable"),
       uiOutput("slide1"),
@@ -47,11 +49,11 @@ ui <- fluidPage(
                                     "Number of Apps Installed",
                                     "Data Usage (MB/day)",
                                     "Age"),
-                   choiceValues = numeric_vars,
+                   choiceValues = num_vars,
                    selected = "age"),
       h2("Subset on your second numeric variable"),
       uiOutput("slide2"),
-      actionButton("subset_data","Subset the data")
+      actionButton("sub_data","Subset the data")
     ),
     mainPanel()
 ))
@@ -67,7 +69,7 @@ server <- function(input, output, session) {
   observeEvent(input$num_var2, {
     num_var2 <- input$num_var2
     num_var1 <- input$num_var1
-    choices <- numeric_vars
+    choices <- num_vars
     if (num_var2 != num_var1){
       choices <- choices[-which(choices == num_var2)]
       updateRadioButtons(session,
@@ -81,7 +83,7 @@ server <- function(input, output, session) {
   observeEvent(input$num_var1, {
     num_var2 <- input$num_var2
     num_var1 <- input$num_var1
-    choices <- numeric_vars
+    choices <- num_vars
     if (num_var2 != num_var1){
       choices <- choices[-which(choices == num_var1)]
       updateRadioButtons(session,
@@ -92,6 +94,7 @@ server <- function(input, output, session) {
   })
   
   # slider 1
+  # notice we use min and max functions to define bounds
   output$slide1 <- renderUI({
     slide_min1 <- min(mobile_data[[input$num_var1]])
     slide_max1 <- max(mobile_data[[input$num_var1]])
@@ -104,6 +107,7 @@ server <- function(input, output, session) {
   })
   
   # slider 2
+  # same layout as above, slider 1
   output$slide2 <- renderUI({
     slide_min2 <- min(mobile_data[[input$num_var2]])
     slide_max2 <- max(mobile_data[[input$num_var2]])
@@ -114,6 +118,41 @@ server <- function(input, output, session) {
                 value = c(slide_min2, slide_max2)
     )
   })
+  
+  # next we need to deal with the button being clicked to subset the data
+  # told to use reactive() or reactiveValues()
+  
+  mobile_data_new <- reactive({
+    
+    # categorical variables
+    # gender subset first
+    # if not both then filter accordingly
+    if(input$gender_select != "Both"){
+      df <- mobile_data |>
+        filter(gender == input$gender_select)
+    }
+    
+    # operating system subset next
+    # same as above, gender
+    if(input$syst_select != "Both"){
+      df <- df |>
+        filter(op_system == input$syst_select)
+    }
+    
+    # numeric variables
+    # need to only allow the range specified by the slider, which has a min and max
+    # .data tells us to refer to the df we are piping on
+    df <- df |>
+      filter(.data[[input$num_var1]] >= input$slide1[1],
+             .data[[input$num_var1]] <= input$slide1[2],
+             .data[[input$num_var2]] >= input$slide2[1],
+             .data[[input$num_var2]] <= input$slide2[2])
+    
+    # return
+    df
+  })
+  
+  #observeEvent(input$sub_data,{})
 }
 
 
