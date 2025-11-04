@@ -89,9 +89,7 @@ n_system_gender
 n_behavior_gender <- table(mobile_data$behavior_class, mobile_data$gender)
 n_behavior_gender
 
-# Plots
-
-# plot 1, scatter plot number of apps vs app usage time
+# scatter plot number of apps vs app usage time, multivariate
 ggplot(mobile_data, aes(x = num_apps, y = app_usage, color = gender)) +
   geom_jitter() +
   scale_color_manual(
@@ -101,7 +99,7 @@ ggplot(mobile_data, aes(x = num_apps, y = app_usage, color = gender)) +
        x = "Number of Apps Installed", 
        y = "App Usage Time (min/day)")
 
-# plot 2, same plot as above with faceting used for device model
+# same plot as above with faceting used for device model, multivariate
 ggplot(mobile_data, aes(x = num_apps, y = app_usage, color = gender)) +
   geom_jitter() +
   facet_wrap(~device_model)+
@@ -112,7 +110,7 @@ ggplot(mobile_data, aes(x = num_apps, y = app_usage, color = gender)) +
        x = "Number of Apps Installed", 
        y = "App Usage Time (min/day)")
 
-# plot 3, density plot age by operating system
+# density plot age by operating system, multivariate
 ggplot(mobile_data, aes(x = age, fill = op_system)) +
   geom_density(alpha = 0.5) +
   scale_fill_manual(
@@ -123,7 +121,7 @@ ggplot(mobile_data, aes(x = age, fill = op_system)) +
        y = "Density")
 
 
-# plot 4, bar chart of device model by behavior class
+# bar chart of device model by behavior class
 ggplot(mobile_data, aes(x = device_model, fill = behavior_class)) +
   geom_bar() +
   # I referenced outside documentation to create a gradient
@@ -132,14 +130,23 @@ ggplot(mobile_data, aes(x = device_model, fill = behavior_class)) +
        x = "Device Model",
        y = "Count")
 
-# plot 5 violin plots of screen time
+# violin plots of screen time, multivariate
 ggplot(mobile_data, aes(x = behavior_class, y = age)) +
   geom_violin(fill = "lightyellow") +
+  facet_wrap(~gender) +
   labs(title = "Distribution of Age by Behavior Class",
        x = "Behavior Class",
        y = "Age")
 
-# plot 6 Hexbin NEW (did not cover in class) battery drain vs data usage,
+# same plot as above faceting on operating system as well, multivariate
+ggplot(mobile_data, aes(x = behavior_class, y = age)) +
+  geom_violin(fill = "lightyellow") +
+  facet_wrap(op_system ~ gender) +
+  labs(title = "Distribution of Age by Behavior Class",
+       x = "Behavior Class",
+       y = "Age")
+
+# Hexbin NEW (did not cover in class) battery drain vs data usage
 ggplot(mobile_data, aes(x = battery_drain, y = data_usage)) +
   geom_hex(bins = 25) +
   scale_fill_gradient(low = "lightblue", high = "darkblue") +
