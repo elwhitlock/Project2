@@ -43,13 +43,13 @@ colSums(is.na(mobile_data))
 num_summary_g <- mobile_data |>
   group_by(gender)|>
   summarize(across(where(is.numeric), list(mean = mean, sd = sd, min = min, max = max)))
-num_summary_g
+view(num_summary_g)
 
 # numeric variable summary grouped by behavior class
 num_summary_b <- mobile_data |>
   group_by(behavior_class)|>
   summarize(across(where(is.numeric), list(mean = mean, sd = sd, min = min, max = max)))
-num_summary_b
+view(num_summary_b)
 
 # box plot of screen time grouped by operating system
 ggplot(mobile_data, aes(x=op_system, y = screen_on, fill = op_system)) +
@@ -104,9 +104,10 @@ ggplot(mobile_data, aes(x = num_apps, y = app_usage, color = gender)) +
 # plot 2, same plot as above with faceting used for device model
 ggplot(mobile_data, aes(x = num_apps, y = app_usage, color = gender)) +
   geom_jitter() +
+  facet_wrap(~device_model)+
   scale_color_manual(
-    name = "Operating System",
-    values = c("iOS" = "blue", "Android" = "green")) +
+    name = "Gender",
+    values = c("Female" = "pink", "Male" = "lightblue")) +
   labs(title = "Number of Apps Installed vs App Usage Time Faceted by Device Model", 
        x = "Number of Apps Installed", 
        y = "App Usage Time (min/day)")
@@ -115,8 +116,8 @@ ggplot(mobile_data, aes(x = num_apps, y = app_usage, color = gender)) +
 ggplot(mobile_data, aes(x = age, fill = op_system)) +
   geom_density(alpha = 0.5) +
   scale_fill_manual(
-    name = "Gender",
-    values = c("Female" = "pink", "Male" = "lightblue")) +
+    name = "Operating System",
+    values = c("iOS" = "blue", "Android" = "green")) +
   labs(title = "Density of age by Operating System",
        x = "Age", 
        y = "Density")
@@ -134,14 +135,13 @@ ggplot(mobile_data, aes(x = device_model, fill = behavior_class)) +
 # plot 5 violin plots of screen time
 ggplot(mobile_data, aes(x = behavior_class, y = age)) +
   geom_violin(fill = "lightyellow") +
-  labs(title = "Distribution of Screen Time by Behavior Class",
+  labs(title = "Distribution of Age by Behavior Class",
        x = "Behavior Class",
        y = "Age")
 
 # plot 6 Hexbin NEW (did not cover in class) battery drain vs data usage,
 ggplot(mobile_data, aes(x = battery_drain, y = data_usage)) +
-  geom_hex() +
-  geom_hex(bins = 18) +
+  geom_hex(bins = 25) +
   scale_fill_gradient(low = "lightblue", high = "darkblue") +
   labs(title = "Hexbin Plot of Battery Drain vs Data Usage",
        x = "Battery Drain (mAh/day)",
