@@ -7,6 +7,7 @@
 library(shiny)
 library(shinyalert)
 library(tidyverse)
+library(DT)
 
 # so we can reference data
 source("static.R")
@@ -55,7 +56,19 @@ ui <- fluidPage(
       uiOutput("slide2"),
       actionButton("sub_data","Subset the data")
     ),
-    mainPanel()
+    mainPanel(
+      tabsetPanel(
+        # for this panel I used outside resources to learn about HTML
+        tabPanel("About",
+                 img(src = "phone.jpg", width="50%")
+                 ),
+        # using provided code
+        tabPanel("Data Download",
+                 dataTableOutput("data_tbl")),
+        tabPanel("Data Exploration"
+                 )
+      )
+    )
 ))
 
 
@@ -107,11 +120,11 @@ server <- function(input, output, session) {
   })
   
   # slider 2
-  # same layout as above, slider 1
+  # same layout as above, slider 2
   output$slide2 <- renderUI({
     slide_min2 <- min(mobile_data[[input$num_var2]])
     slide_max2 <- max(mobile_data[[input$num_var2]])
-    sliderInput("slide1",
+    sliderInput("slide2",
                 "Set values",
                 min = slide_min2,
                 max = slide_max2,
@@ -124,11 +137,14 @@ server <- function(input, output, session) {
   
   mobile_data_new <- reactive({
     
+    # initialize
+    df<-mobile_data
+    
     # categorical variables
     # gender subset first
     # if not both then filter accordingly
     if(input$gender_select != "Both"){
-      df <- mobile_data |>
+      df <- df |>
         filter(gender == input$gender_select)
     }
     
@@ -147,12 +163,15 @@ server <- function(input, output, session) {
              .data[[input$num_var1]] <= input$slide1[2],
              .data[[input$num_var2]] >= input$slide2[1],
              .data[[input$num_var2]] <= input$slide2[2])
-    
-    # return
+
     df
   })
   
   #observeEvent(input$sub_data,{})
+  
+  # create data table for the download tab
+  output$data_tbl <- renderDataTable(
+    mobile_data_new())
 }
 
 
