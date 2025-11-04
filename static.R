@@ -39,16 +39,21 @@ mobile_data <- read_csv("user_behavior_dataset.csv") |>
 glimpse(mobile_data)
 colSums(is.na(mobile_data))
 
+# define numeric variables (note ID not included)
+num_vars <- c("app_usage", "screen_on", "battery_drain",
+                  "num_apps", "data_usage", "age")
+
+# all_of() was used to interpret the list above, num_vars, withing the across() function
 # numeric variable summary grouped by gender
 num_summary_g <- mobile_data |>
   group_by(gender)|>
-  summarize(across(where(is.numeric), list(mean = mean, sd = sd, min = min, max = max)))
+  summarize(across(all_of(num_vars), list(mean = mean, sd = sd, min = min, max = max)))
 view(num_summary_g)
 
 # numeric variable summary grouped by behavior class
 num_summary_b <- mobile_data |>
   group_by(behavior_class)|>
-  summarize(across(where(is.numeric), list(mean = mean, sd = sd, min = min, max = max)))
+  summarize(across(all_of(num_vars), list(mean = mean, sd = sd, min = min, max = max)))
 view(num_summary_b)
 
 # box plot of screen time grouped by operating system

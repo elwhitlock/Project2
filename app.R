@@ -34,27 +34,68 @@ ui <- fluidPage(
                                     "Number of Apps Installed",
                                     "Data Usage (MB/day)",
                                     "Age"),
-                   choiceValues = c("app_usage",
-                                    "screen_on",
-                                    "battery_drain",
-                                    "num_apps",
-                                    "data_usage",
-                                    "age"), 
+                   choiceValues = numeric_vars,
                    selected = "app_usage"),
       h2("Subset on your first numeric variable"),
-
+      uiOutput("slide1"),
+      h2("Choose the first numeric variable to summarize on"),
+      radioButtons("num_var2",
+                   label = "Select variable",
+                   choiceNames  = c("App Usage Time (min/day)",
+                                    "Screen On Time (hours/day)",
+                                    "Battery Drain (mAh/day)",
+                                    "Number of Apps Installed",
+                                    "Data Usage (MB/day)",
+                                    "Age"),
+                   choiceValues = numeric_vars,
+                   selected = "age"),
+      h2("Subset on your second numeric variable"),
+      uiOutput("slide2"),
       actionButton("subset_data","Subset the data")
     ),
+    mainPanel()
 ))
 
 
 server <- function(input, output, session) {
   
-  # We need the slider to update based on the numeric variable selected
-  output$num_slide1 <- renderUI({
-    slide_min1 <- min(mobile_data[[input$numvar1]])
-    slide_max1 <- max(mobile_data[[input$numvar1]])
-    sliderInput("num_slide1",
+  # We need the sliders to update based on the numeric variables selected
+  # first make sure that they can not input the same variable twice 
+  # I used HW7 for reference on this
+  
+  # update first numeric variable
+  observeEvent(input$num_var2, {
+    num_var2 <- input$num_var2
+    num_var1 <- input$num_var1
+    choices <- numeric_vars
+    if (num_var2 != num_var1){
+      choices <- choices[-which(choices == num_var2)]
+      updateRadioButtons(session,
+                         "num_var1",
+                          choices = choices,
+                          selected = num_var1)
+    }
+  })
+  
+  # update second numeric variable
+  observeEvent(input$num_var1, {
+    num_var2 <- input$num_var2
+    num_var1 <- input$num_var1
+    choices <- numeric_vars
+    if (num_var2 != num_var1){
+      choices <- choices[-which(choices == num_var1)]
+      updateRadioButtons(session,
+                         "num_var2",
+                          choices = choices,
+                          selected = num_var2)
+    }
+  })
+  
+  # slider 1
+  output$slide1 <- renderUI({
+    slide_min1 <- min(mobile_data[[input$num_var1]])
+    slide_max1 <- max(mobile_data[[input$num_var1]])
+    sliderInput("slide1",
                 "Set values",
                 min = slide_min1,
                 max = slide_max1,
@@ -62,15 +103,15 @@ server <- function(input, output, session) {
     )
   })
   
-  
-  output$num_slide1 <- renderUI({
-    slide_min1 <- min(mobile_data[[input$numvar1]])
-    slide_max1 <- max(mobile_data[[input$numvar1]])
-    sliderInput("num_slide1",
+  # slider 2
+  output$slide2 <- renderUI({
+    slide_min2 <- min(mobile_data[[input$num_var2]])
+    slide_max2 <- max(mobile_data[[input$num_var2]])
+    sliderInput("slide1",
                 "Set values",
-                min = slide_min1,
-                max = slide_max1,
-                value = c(slide_min1, slide_max1)
+                min = slide_min2,
+                max = slide_max2,
+                value = c(slide_min2, slide_max2)
     )
   })
 }
