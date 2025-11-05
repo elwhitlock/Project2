@@ -8,6 +8,7 @@ library(shiny)
 library(shinyalert)
 library(tidyverse)
 library(DT)
+library(ggplot2)
 
 # so we can reference data
 source("static.R")
@@ -75,18 +76,21 @@ ui <- fluidPage(
                  # based on choice
                  
                  # plot
-                 # note I did a lot of plot exploration in static code, I am limiting to only three types
                  conditionalPanel(
                    condition = "input.view_type == 'Plots'",
                    radioButtons("plot_type", label = "What type of plot?",
                                choices = c("Scatter",
+                                           "Bar",
+                                           "Density",
                                            "Violin",
+                                           "Box",
                                            "Hexbin")),
                                 selected = "Scatter",
                  
-                  # follow-up inputs
-                  uiOutput("plot_followups"),
-                  plotOutput("explore_plot")),
+                    # follow-up inputs
+                    uiOutput("plot_followups"),
+                    # make plot
+                    plotOutput("explore_plot")),
                  
                   # summary
                   conditionalPanel(
@@ -98,6 +102,7 @@ ui <- fluidPage(
                     
                     # follow-up inputs
                     uiOutput("summary_followups"),
+                    # make table
                     tableOutput("summary_out"))
         )
       )
@@ -221,7 +226,133 @@ server <- function(input, output, session) {
   
   # DATA EXPLORATION
   
-  }
+  # # if statements to check type and ask for follow-up inputs
+  # taglist() lets us return multiple UI elements
+  # note this code only allows for one facet as per static code
+  output$plot_followups <- renderUI({
+    
+    # scatter
+    if (input$plot_type == "Scatter") {
+      tagList(
+        selectInput("sc_x", "X variable (numeric)", choices = num_vars),
+        selectInput("sc_y", "Y variable (numeric)", choices = num_vars),
+        selectInput("sc_color", "Color by (categorical)",
+                    choices = c("None", cat_vars), selected = "None")
+      )
+    
+    # box  
+    } else if (input$plot_type == "Box") {
+      tagList(
+        selectInput("bx_x", "Group (categorical)", choices = cat_vars),
+        selectInput("bx_y", "Y variable (numeric)", choices = num_vars),
+        selectInput("bx_facet", "Facet by (optional)",
+                    choices = c("None", cat_vars), selected = "None")
+      )
+   
+    # bar   
+    } else if (input$plot_type == "Bar") {
+      tagList(
+        selectInput("bar_x", "Categorical variable", choices = cat_vars),
+        selectInput("bar_fill", "Fill by (optional)",
+                    choices = c("None", cat_vars), selected = "None"),
+      )
+     
+    # density   
+    } else if (input$plot_type == "Density") {
+      tagList(
+        selectInput("dn_x", "Numeric variable", choices = num_vars),
+        selectInput("dn_fill", "Fill by (categorical)", choices = cat_vars),
+      )
+      
+    # violin  
+    } else if (input$plot_type == "Violin") {
+      tagList(
+        selectInput("vl_x", "Group (categorical)", choices = cat_vars),
+        selectInput("vl_y", "Y variable (numeric)", choices = num_vars),
+        selectInput("vl_facet", "Facet by (optional)",
+                    choices = c("None", cat_vars), selected = "None")
+      )
+      
+    # violin
+    } else if (input$plot_type == "Hexbin") {
+      tagList(
+        selectInput("hx_x", "X (numeric)", choices = num_vars),
+        selectInput("hx_y", "Y (numeric)", choices = num_vars),
+        selectInput("hx_facet", "Facet by (optional)",
+                    choices = c("None", cat_vars), selected = "None")
+      )
+    }
+  })
+  
+  
+  # if statements to check type and generate plot
+  # based on code from static 
+  output$explore_plot <- renderPlot({
+    
+    df <- mobile_data_new()
+    
+    # scatter
+    if (input$plot_type == "Scatter") {
+      ggplot(df, aes(x = .data[[input$sc_x]], y = .data[[input$sc_y]],
+                     color = if (input$sc_color != "None") .data[[input$sc_color]])) +
+        geom_point(alpha = 0.7) +
+        labs(x = input$sc_x, 
+             y = input$sc_y,
+             # custom title (will be used in plots below too)
+             title = paste0("Scatterplot of ", input$sc_y, " vs ", input$sc_x)) 
+      
+    # box
+    } else if (input$plot_type == "Box") {
+      g <- ggplot(df, aes(x = .data[[input$bx_x]], y = .data[[input$bx_y]])) +
+        geom_boxplot(aes(fill = .data[[input$bx_x]])) +
+        labs(x = input$bx_x, y = input$bx_y, title = paste0("Boxplot of ", input$bx_y, " by ", input$bx_x)) +
+      if (input$bx_facet != "None"){
+        # conditional for facet, will add it on if it exists, same for other plots that use it
+        # as.formula means it is converts it from the past text string
+        g <- g + facet_wrap(as.formula(paste("~", input$bx_facet)))
+      }
+      g
+      
+    # bar  
+    } else if (input$plot_type == "Bar") {
+      g <- ggplot(df, aes(x = .data[[input$bar_x]])) +
+        geom_bar(aes(fill = .data[[input$bar_x]])) +
+        labs(x = input$bar_x, y = "Count", title = "Bar Chart") 
+      if (input$bar_fill != "None")
+        g <- ggplot(df, aes(x = .data[[input$bar_x]], fill = .data[[input$bar_fill]])) +
+        geom_bar(position = "stack") +
+        labs(x = input$bar_x, y = "Count", title = paste0("Bar chart of ", input$bar_x))
+      g
+      
+    # density  
+    } else if (input$plot_type == "Density") {
+      ggplot(df, aes(x = .data[[input$dn_x]], fill = .data[[input$dn_fill]])) +
+        geom_density() +
+        labs(x = input$dn_x, y = "Density", title = paste0("Density of ", input$dn_x, " by ", input$dn_fill)) 
+    
+    # violin  
+    } else if (input$plot_type == "Violin") {
+      g <- ggplot(df, aes(x = .data[[input$vl_x]], y = .data[[input$vl_y]])) +
+        geom_violin() +
+        labs(x = input$vl_x, y = input$vl_y, title = paste0("Violin plot of ", input$vl_y, " by ", input$vl_x)) 
+      if (input$vl_facet != "None"){
+      g <- g + facet_wrap(as.formula(paste("~", input$vl_facet)))
+      }
+      g
+    
+    # hexbin  
+    } else if (input$plot_type == "Hexbin") {
+      g <- ggplot(df, aes(x = .data[[input$hx_x]], y = .data[[input$hx_y]])) +
+        geom_hex(bins = 25) +
+        labs(x = input$hx_x, y = input$hx_y, title = paste0("Hexbin plot of ", input$hx_y, " vs ", input$hx_x)) 
+      if (input$vl_facet != "None"){
+      g <- g + facet_wrap(as.formula(paste("~", input$bx_facet)))
+      }
+      g
+    }
+  })
+
+}
 
 
 # Run the application 

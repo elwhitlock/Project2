@@ -43,6 +43,9 @@ colSums(is.na(mobile_data))
 num_vars <- names(mobile_data)[sapply(mobile_data, is.numeric)]
 num_vars <- setdiff(num_vars, "ID")  
 
+# define categorical variables
+cat_vars <- names(mobile_data)[sapply(mobile_data, is.factor)]
+
 # all_of() was used to interpret the list above, num_vars, withing the across() function
 # numeric variable summary grouped by gender
 num_summary_g <- mobile_data |>
@@ -55,27 +58,6 @@ num_summary_b <- mobile_data |>
   group_by(behavior_class)|>
   summarize(across(all_of(num_vars), list(mean = mean, sd = sd, min = min, max = max)))
 view(num_summary_b)
-
-# box plot of screen time grouped by operating system
-ggplot(mobile_data, aes(x=op_system, y = screen_on, fill = op_system)) +
-  geom_boxplot() +
-  scale_fill_manual(
-    name = "Operating System",
-    values = c("iOS" = "blue", "Android" = "green")) +
-  labs(title = "Boxplot of Screen on Time by Operating System", 
-       x = "Operatng System", 
-       y = "Screen on Time (hours/day)")
-
-# box plot of app usage grouped by operating system
-ggplot(mobile_data, aes(x=op_system, y = app_usage, fill = op_system)) +
-  geom_boxplot() +
-  scale_fill_manual(
-    name = "Operating System",
-    values = c("iOS" = "blue", "Android" = "green")) +
-  labs(title = "Boxplot of App Usage Time by Operating System", 
-       x = "Operatng System", 
-       y = "App Usage Time (min/day)")
-
 
 # categorical counts via one way tables
 n_gender <- table(mobile_data$gender)
@@ -95,6 +77,18 @@ n_behavior_gender <- table(mobile_data$behavior_class, mobile_data$gender)
 n_behavior_gender
 
 # scatter plot number of apps vs app usage time, multivariate
+
+# box plot of app usage grouped by operating system, multivariate
+ggplot(mobile_data, aes(x=op_system, y = data_usage, fill = op_system)) +
+  geom_boxplot() +
+  facet_wrap(~gender)+
+  scale_fill_manual(
+    name = "Operating System",
+    values = c("iOS" = "blue", "Android" = "green")) +
+  labs(title = "Boxplot of App Usage Time by Operating System", 
+       x = "Operatng System", 
+       y = "App Usage Time (min/day)")
+
 ggplot(mobile_data, aes(x = num_apps, y = app_usage, color = gender)) +
   geom_jitter() +
   scale_color_manual(
@@ -104,31 +98,11 @@ ggplot(mobile_data, aes(x = num_apps, y = app_usage, color = gender)) +
        x = "Number of Apps Installed", 
        y = "App Usage Time (min/day)")
 
-# same plot as above with faceting used for device model, multivariate
-ggplot(mobile_data, aes(x = num_apps, y = app_usage, color = gender)) +
-  geom_jitter() +
-  facet_wrap(~device_model)+
-  scale_color_manual(
-    name = "Gender",
-    values = c("Female" = "pink", "Male" = "lightblue")) +
-  labs(title = "Number of Apps Installed vs App Usage Time Faceted by Device Model", 
-       x = "Number of Apps Installed", 
-       y = "App Usage Time (min/day)")
 
-# density plot age by operating system, multivariate
+
+# density plot age by operating system faceting on gender, multivariate
 ggplot(mobile_data, aes(x = age, fill = op_system)) +
   geom_density(alpha = 0.5) +
-  scale_fill_manual(
-    name = "Operating System",
-    values = c("iOS" = "blue", "Android" = "green")) +
-  labs(title = "Density of age by Operating System",
-       x = "Age", 
-       y = "Density")
-
-# same as above faceting on gender
-ggplot(mobile_data, aes(x = age, fill = op_system)) +
-  geom_density(alpha = 0.5) +
-  facet_wrap(~gender) +
   scale_fill_manual(
     name = "Operating System",
     values = c("iOS" = "blue", "Android" = "green")) +
@@ -148,29 +122,15 @@ ggplot(mobile_data, aes(x = device_model, fill = behavior_class)) +
 
 # violin plots of screen time, multivariate
 ggplot(mobile_data, aes(x = behavior_class, y = age)) +
-  geom_violin(fill = "lightyellow") +
+  geom_violin(fill = "pink") +
   facet_wrap(~gender) +
   labs(title = "Distribution of Age by Behavior Class",
        x = "Behavior Class",
        y = "Age")
 
-# same plot as above faceting on operating system as well, multivariate
-ggplot(mobile_data, aes(x = behavior_class, y = age)) +
-  geom_violin(fill = "lightyellow") +
-  facet_wrap(op_system ~ gender) +
-  labs(title = "Distribution of Age by Behavior Class",
-       x = "Behavior Class",
-       y = "Age")
 
-# Hexbin NEW (did not cover in class) battery drain vs data usage
-ggplot(mobile_data, aes(x = battery_drain, y = data_usage)) +
-  geom_hex(bins = 25) +
-  scale_fill_gradient(low = "lightblue", high = "darkblue") +
-  labs(title = "Hexbin Plot of Battery Drain vs Data Usage",
-       x = "Battery Drain (mAh/day)",
-       y = "Data Usage (MB/day)") 
-
-# same as above faceting on operating system
+# Hexbin NEW (did not cover in class) battery drain vs data usage 
+# faceting on operating system, multivariate
 ggplot(mobile_data, aes(x = battery_drain, y = data_usage)) +
   geom_hex(bins = 25) +
   facet_wrap(~op_system) +
