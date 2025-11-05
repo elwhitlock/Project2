@@ -98,7 +98,7 @@ ui <- fluidPage(
                     radioButtons("sum_type", label = "Would you like numeric or categorical summary?",
                                  choices = c("Numeric",
                                              "Categorical"),
-                                 selected = "Scatter"),
+                                 selected = "Numeric"),
                     
                     # follow-up inputs
                     uiOutput("summary_followups"),
@@ -173,10 +173,13 @@ server <- function(input, output, session) {
   })
   
   # next we need to deal with the button being clicked to subset the data
-  # told to use reactive() or reactiveValues()
-  
+  # told to use reactive() I will use in conjunction with isolate()
   mobile_data_new <- reactive({
-
+    
+    if (input$sub_data == 0)
+      return()
+    
+    isolate({
     df<-mobile_data
     
     # categorical variables
@@ -204,9 +207,9 @@ server <- function(input, output, session) {
              .data[[input$num_var2]] <= input$slide2[2])
 
     df
+    })
   })
-  
-  #observeEvent(input$sub_data,{})
+
   
   #  DATA DOWNLOAD
   
@@ -389,7 +392,7 @@ server <- function(input, output, session) {
     
     df <- mobile_data_new()
     
-    # numeric summaries
+    # numeric summary
     if (input$sum_type == "Numeric") {
        # grouped numeric summary
        if (input$sum_grp != "None") {
@@ -421,7 +424,6 @@ server <- function(input, output, session) {
       # one-way table     
       } else {
         tbl <- table(df[[input$sum_cat]])
-
       }
     }
   })
