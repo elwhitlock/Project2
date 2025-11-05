@@ -47,17 +47,17 @@ num_vars <- setdiff(num_vars, "user_id")
 cat_vars <- names(mobile_data)[sapply(mobile_data, is.factor)]
 
 # all_of() was used to interpret the list above, num_vars, withing the across() function
-# numeric variable summary grouped by gender
+# numeric variable summary grouped by gender (summarized w/ non outlier stats)
 num_summary_g <- mobile_data |>
   group_by(gender)|>
-  summarize(across(all_of(num_vars), list(mean = mean, sd = sd, min = min, max = max)))
-view(num_summary_g)
+  summarize(across(all_of(num_vars), list(mean = mean, sd = sd)))
+print(num_summary_g)
 
-# numeric variable summary grouped by behavior class
+# numeric variable summary grouped by behavior class (summarized w/ outlier stats)
 num_summary_b <- mobile_data |>
   group_by(behavior_class)|>
-  summarize(across(all_of(num_vars), list(mean = mean, sd = sd, min = min, max = max)))
-view(num_summary_b)
+  summarize(across(all_of(num_vars), list(med = median, IQR = IQR)))
+print(num_summary_b)
 
 # categorical counts via one way tables
 n_gender <- table(mobile_data$gender)

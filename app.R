@@ -228,7 +228,7 @@ server <- function(input, output, session) {
   
   # plots
   
-  # # if statements to check type and ask for follow-up inputs
+  # if statements to check type and ask for follow-up inputs
   # taglist() lets us return multiple UI elements
   # note this code only allows for one facet as per static code
   output$plot_followups <- renderUI({
@@ -366,7 +366,66 @@ server <- function(input, output, session) {
   
   # summaries
   
+  # if statements to check type and ask for follow-up inputs
+  output$summary_followups <- renderUI({
+    
+    if (input$sum_type == "Numeric") {
+      tagList(
+        selectInput("sum_num", "Choose a numeric variable to summarize", choices = num_vars),
+        selectInput("sum_grp", "Choose a catergorical variable to group by (optional)",
+                    choices = c("None", cat_vars), selected = "None"))
 
+    } else {
+      tagList(
+      selectInput("sum_cat", "Choose a categorical variable to summarize",
+                  choices = cat_vars),
+      selectInput("sum_cat2", "Choose a second categorical variable to summarize by (optional)",
+                  choices = c("None", cat_vars), selected = "None"))
+    }
+  })
+  
+  # if statements to check type and generate summary
+  output$summary_out <- renderTable({
+    
+    df <- mobile_data_new()
+    
+    # numeric summaries
+    if (input$sum_type == "Numeric") {
+       # grouped numeric summary
+       if (input$sum_grp != "None") {
+        df |>
+          group_by(.data[[input$sum_grp]]) |>
+          summarise(
+            mean = mean(.data[[input$sum_num]]),
+            sd = sd(.data[[input$sum_num]]),
+            median = median(.data[[input$sum_num]]),
+            IQR = IQR(.data[[input$sum_num]]))
+         
+      # not grouped numeric summary   
+      } else {
+        df |>
+          summarise(
+            mean = mean(.data[[input$sum_num]]),
+            sd = sd(.data[[input$sum_num]]),
+            median = median(.data[[input$sum_num]]),
+            IQR = IQR(.data[[input$sum_num]]))
+      }
+      
+    # categorical summaries
+    } else {
+      
+      # two-way table
+      if (input$sum_cat2 != "None") {
+        tbl <- table(df[[input$sum_cat]], df[[input$sum_cat2]])
+        
+      # one-way table     
+      } else {
+        tbl <- table(df[[input$sum_cat]])
+
+      }
+    }
+  })
+  
 }
 
 
