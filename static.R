@@ -134,7 +134,7 @@ ggplot(mobile_data, aes(x = behavior_class, y = age)) +
 ggplot(mobile_data, aes(x = battery_drain, y = data_usage)) +
   geom_hex(bins = 25) +
   facet_wrap(~op_system) +
-  scale_fill_gradient(low = "lightblue", high = "darkblue") +
+  scale_fill_brewer(palette = "Blues") +
   labs(title = "Hexbin Plot of Battery Drain vs Data Usage",
        x = "Battery Drain (mAh/day)",
        y = "Data Usage (MB/day)") 

@@ -3,12 +3,13 @@
 # ST 558
 
 
-# packages needed
+# packages needed, make sure theyre installed!
 library(shiny)
 library(shinyalert)
 library(tidyverse)
 library(DT)
-library(ggplot2)
+library(shinycssloaders)
+library(plotly)   
 
 # so we can reference data
 source("static.R")
@@ -38,14 +39,14 @@ ui <- fluidPage(
       radioButtons("num_var1",
                    label = "Select first numeric variable",
                    choices = num_vars,
-                   selected = "app_usage"),
+                   selected = NULL),
       
       uiOutput("slide1"),
       
       radioButtons("num_var2",
                    label = "Select second numeric variable",
                    choices = num_vars,
-                   selected = "age"),
+                   selected = NULL),
       
       uiOutput("slide2"),
       
@@ -59,7 +60,7 @@ ui <- fluidPage(
         # includes image and link!
         tabPanel("About",
                  HTML("<h2>About This App and Key Features</h2>
-                        <p> This interactive Shiny dashboard explores mobile device 
+                        <p> This interactive Shiny app explores mobile device 
                         usage patterns. In the side panel you can subset the data by gender, 
                         operating system, and by modifying the range of values for any two
                         numeric variables. However you must hit the button to update the data! 
@@ -76,13 +77,13 @@ ui <- fluidPage(
                         
                         <h2>About the Data</h2>
                         <p> This app uses 
-                        <a href='https://www.kaggle.com/datasets/meetnagadia/mobile-device-usage-and-user-behavior'
+                        <a href='https://www.kaggle.com/datasets/valakhorasani/mobile-device-usage-and-user-behavior-dataset/data'
                         target='_blank'>
                         Mobile Device Usage and User Behavior Data Set
-                        </a>.Mobile Device Usage and User Behavior Data Set
+                        </a>
                         this data includes demographic data such as gender and age. 
                         It includes information about the users device such as the 
-                        operating system and device model. Data on their device use 
+                        operating system and device model. Information on their device use 
                         was also collected such as number of apps installed, app usage 
                         time (min/day), battery consumption (milliamp-hours/day), 
                         screen on time (hours/day), and data usage (megabytes/day). 
@@ -123,7 +124,9 @@ ui <- fluidPage(
                     # follow-up inputs
                     uiOutput("plot_followups"),
                     # make plot
-                    plotOutput("explore_plot")),
+                    # spinner included to be safe
+                    # plotly to make it interactive :)
+                    withSpinner(plotlyOutput("explore_plot"))),
                  
                   # summary
                   conditionalPanel(
@@ -145,6 +148,7 @@ ui <- fluidPage(
 
 
 server <- function(input, output, session) {
+  
   # SIDEBAR
   
   # We need the sliders to update based on the numeric variables selected
@@ -238,11 +242,20 @@ server <- function(input, output, session) {
              .data[[input$num_var1]] <= input$slide1[2],
              .data[[input$num_var2]] >= input$slide2[1],
              .data[[input$num_var2]] <= input$slide2[2])
-
+    
+    # if zero observations, ran into this issue myself
+    # return(NULL) stops df from outputting
+    if (nrow(df) == 0) {
+      shinyalert(
+        title = "Opps",
+        text = "Your filters excluded all observations. Try broadening your subset",
+        type = "error"
+      )
+      return(NULL)  
+    }
     df
     })
   })
-
   
   #  DATA DOWNLOAD
   
@@ -325,29 +338,29 @@ server <- function(input, output, session) {
   
   # if statements to check type and generate plot
   # based on code from static 
-  output$explore_plot <- renderPlot({
+  output$explore_plot <- renderPlotly({
     
     df <- mobile_data_new()
     
     # scatter
     if (input$plot_type == "Scatter") {
       if (input$sc_color != "None"){
-      ggplot(df, aes(x = .data[[input$sc_x]], y = .data[[input$sc_y]],
+        g <- ggplot(df, aes(x = .data[[input$sc_x]], y = .data[[input$sc_y]],
                      color = .data[[input$sc_color]] )) +
-          geom_point() +
+          geom_jitter() +
           labs(x = input$sc_x, 
                y = input$sc_y,
                # custom title (will be used in plots below too)
                title = paste0("Scatterplot of ", input$sc_y, " vs ", input$sc_x)) 
-      } 
+      ggplotly(g) } 
       else {
-        ggplot(df, aes(x = .data[[input$sc_x]], y = .data[[input$sc_y]])) + 
-          geom_point() +
+        g <- ggplot(df, aes(x = .data[[input$sc_x]], y = .data[[input$sc_y]])) + 
+          geom_jitter() +
           labs(x = input$sc_x, 
                y = input$sc_y,
                # custom title (will be used in plots below too)
                title = paste0("Scatterplot of ", input$sc_y, " vs ", input$sc_x)) 
-      }
+        ggplotly(g)}
       
     # box
     } else if (input$plot_type == "Box") {
@@ -359,7 +372,7 @@ server <- function(input, output, session) {
         # as.formula means it is converts it from the past text string
         g <- g + facet_wrap(as.formula(paste("~", input$bx_facet)))
       }
-      g
+      ggplotly(g)
       
     # bar  
     } else if (input$plot_type == "Bar") {
@@ -370,14 +383,15 @@ server <- function(input, output, session) {
         g <- ggplot(df, aes(x = .data[[input$bar_x]], fill = .data[[input$bar_fill]])) +
         geom_bar(position = "stack") +
         labs(x = input$bar_x, y = "Count", title = paste0("Bar chart of ", input$bar_x))}
-      g
+      ggplotly(g)
       
     # density  
     } else if (input$plot_type == "Density") {
-      ggplot(df, aes(x = .data[[input$dn_x]], fill = .data[[input$dn_fill]])) +
+      g <- ggplot(df, aes(x = .data[[input$dn_x]], fill = .data[[input$dn_fill]])) +
         geom_density() +
         labs(x = input$dn_x, y = "Density", title = paste0("Density of ", input$dn_x, " by ", input$dn_fill)) 
-    
+      ggplotly(g)
+      
     # violin  
     } else if (input$plot_type == "Violin") {
       g <- ggplot(df, aes(x = .data[[input$vl_x]], y = .data[[input$vl_y]])) +
@@ -386,7 +400,7 @@ server <- function(input, output, session) {
       if (input$vl_facet != "None"){
       g <- g + facet_wrap(as.formula(paste("~", input$vl_facet)))
       }
-      g
+      ggplotly(g)
     
     # hexbin  
     } else if (input$plot_type == "Hexbin") {
@@ -396,7 +410,7 @@ server <- function(input, output, session) {
       if (input$hx_facet != "None"){
       g <- g + facet_wrap(as.formula(paste("~", input$hx_facet)))
       }
-      g
+      ggplotly(g)
     }
   })
   
