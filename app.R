@@ -16,63 +16,98 @@ source("static.R")
 ui <- fluidPage(
   "Mobile Data",
   sidebarLayout(
+    
+    # side panel
     sidebarPanel(
+      
       h2("Select how you want to subset the data"),
+      
       selectInput("gender_select", label = "Select gender",
                   choices = c("Both", 
                               "Female",
                               "Male"),
                   selected = "Both"),
+      
       selectInput("syst_select", label = "Select operating system",
                   choices = c("Both", 
                               "Android",
                               "iOS"),
-                  selected = "Both"), 
-      h2("Choose the first numeric variable to summarize on"),
+                  selected = "Both"),
+      
       radioButtons("num_var1",
-                   label = "Select variable",
-                   choiceNames  = c("App Usage Time (min/day)",
-                                    "Screen On Time (hours/day)",
-                                    "Battery Drain (mAh/day)",
-                                    "Number of Apps Installed",
-                                    "Data Usage (MB/day)",
-                                    "Age"),
-                   choiceValues = num_vars,
+                   label = "Select first numeric variable",
+                   choices = num_vars,
                    selected = "app_usage"),
-      h2("Subset on your first numeric variable"),
+      
       uiOutput("slide1"),
-      h2("Choose the first numeric variable to summarize on"),
+      
       radioButtons("num_var2",
-                   label = "Select variable",
-                   choiceNames  = c("App Usage Time (min/day)",
-                                    "Screen On Time (hours/day)",
-                                    "Battery Drain (mAh/day)",
-                                    "Number of Apps Installed",
-                                    "Data Usage (MB/day)",
-                                    "Age"),
-                   choiceValues = num_vars,
+                   label = "Select second numeric variable",
+                   choices = num_vars,
                    selected = "age"),
-      h2("Subset on your second numeric variable"),
+      
       uiOutput("slide2"),
+      
       actionButton("sub_data","Subset the data")
     ),
+    
+    # main panel with three tabs
     mainPanel(
       tabsetPanel(
         # for this panel I used outside resources to learn about HTML
         tabPanel("About",
                  img(src = "phone.jpg", width="50%")
                  ),
+        
         # using provided code
         tabPanel("Data Download",
-                 dataTableOutput("data_tbl")),
-        tabPanel("Data Exploration"
-                 )
+                 dataTableOutput("data_tbl"),
+                 downloadButton("down_data","Download the data")),
+        
+        tabPanel("Data Exploration",
+                 
+                 # choose what analysis to view
+                 selectInput("view_type", label = "Do you want to look at plots of summaries?",
+                             choices = c("Plots", 
+                                         "Summaries"),
+                             selected = "Plots"),
+                 
+                 # based on choice
+                 
+                 # plot
+                 # note I did a lot of plot exploration in static code, I am limiting to only three types
+                 conditionalPanel(
+                   condition = "input.view_type == 'Plots'",
+                   radioButtons("plot_type", label = "What type of plot?",
+                               choices = c("Scatter",
+                                           "Violin",
+                                           "Hexbin")),
+                                selected = "Scatter",
+                 
+                  # follow-up inputs
+                  uiOutput("plot_followups"),
+                  plotOutput("explore_plot")),
+                 
+                  # summary
+                  conditionalPanel(
+                    condition = "input.view_type == 'Summaries'",
+                    radioButtons("sum_type", label = "Would you like numeric or categorical summary?",
+                                 choices = c("Numeric",
+                                             "Categorical"),
+                                 selected = "Scatter"),
+                    
+                    # follow-up inputs
+                    uiOutput("summary_followups"),
+                    tableOutput("summary_out"))
+        )
       )
     )
-))
+  )
+)
 
 
 server <- function(input, output, session) {
+  # SIDEBAR
   
   # We need the sliders to update based on the numeric variables selected
   # first make sure that they can not input the same variable twice 
@@ -136,8 +171,7 @@ server <- function(input, output, session) {
   # told to use reactive() or reactiveValues()
   
   mobile_data_new <- reactive({
-    
-    # initialize
+
     df<-mobile_data
     
     # categorical variables
@@ -169,10 +203,25 @@ server <- function(input, output, session) {
   
   #observeEvent(input$sub_data,{})
   
-  # create data table for the download tab
+  #  DATA DOWNLOAD
+  
+  # create data table based on subset
   output$data_tbl <- renderDataTable(
     mobile_data_new())
-}
+  
+  # allows someone to download data, based on provided link
+  output$down_data <- downloadHandler(
+      filename = function() {
+        paste('mobile_subset','.csv', sep='')
+      },
+      content = function(file) {
+        write.csv(mobile_data_new(), file)
+      }
+    )
+  
+  # DATA EXPLORATION
+  
+  }
 
 
 # Run the application 

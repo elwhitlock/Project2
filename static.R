@@ -40,8 +40,8 @@ glimpse(mobile_data)
 colSums(is.na(mobile_data))
 
 # define numeric variables (note ID not included)
-num_vars <- c("app_usage", "screen_on", "battery_drain",
-                  "num_apps", "data_usage", "age")
+num_vars <- names(mobile_data)[sapply(mobile_data, is.numeric)]
+num_vars <- setdiff(num_vars, "ID")  
 
 # all_of() was used to interpret the list above, num_vars, withing the across() function
 # numeric variable summary grouped by gender
@@ -125,6 +125,17 @@ ggplot(mobile_data, aes(x = age, fill = op_system)) +
        x = "Age", 
        y = "Density")
 
+# same as above faceting on gender
+ggplot(mobile_data, aes(x = age, fill = op_system)) +
+  geom_density(alpha = 0.5) +
+  facet_wrap(~gender) +
+  scale_fill_manual(
+    name = "Operating System",
+    values = c("iOS" = "blue", "Android" = "green")) +
+  labs(title = "Density of age by Operating System",
+       x = "Age", 
+       y = "Density")
+
 
 # bar chart of device model by behavior class
 ggplot(mobile_data, aes(x = device_model, fill = behavior_class)) +
@@ -159,3 +170,11 @@ ggplot(mobile_data, aes(x = battery_drain, y = data_usage)) +
        x = "Battery Drain (mAh/day)",
        y = "Data Usage (MB/day)") 
 
+# same as above faceting on operating system
+ggplot(mobile_data, aes(x = battery_drain, y = data_usage)) +
+  geom_hex(bins = 25) +
+  facet_wrap(~op_system) +
+  scale_fill_gradient(low = "lightblue", high = "darkblue") +
+  labs(title = "Hexbin Plot of Battery Drain vs Data Usage",
+       x = "Battery Drain (mAh/day)",
+       y = "Data Usage (MB/day)") 
