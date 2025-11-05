@@ -56,8 +56,41 @@ ui <- fluidPage(
     mainPanel(
       tabsetPanel(
         # for this panel I used outside resources to learn about HTML
+        # includes image and link!
         tabPanel("About",
-                 img(src = "phone.jpg", width="50%")
+                 HTML("<h2>About This App and Key Features</h2>
+                        <p> This interactive Shiny dashboard explores mobile device 
+                        usage patterns. In the side panel you can subset the data by gender, 
+                        operating system, and by modifying the range of values for any two
+                        numeric variables. However you must hit the button to update the data! 
+                        In the download tab, the data can be downloaded in a csv format.
+                        Finally in the exploration tab you can learn about the data. You
+                        can choose between looking at plots, or summaries. The plots include
+                        six different types in which you can choose what variable(s) you
+                        want to look at. For summaries you can create statistics with
+                        respect to numeric variables, and contingency tables with respect to 
+                        categorical variables.
+                        </p>
+                        
+                        <img src='phone.jpg' width='45%'>
+                        
+                        <h2>About the Data</h2>
+                        <p> This app uses 
+                        <a href='https://www.kaggle.com/datasets/meetnagadia/mobile-device-usage-and-user-behavior'
+                        target='_blank'>
+                        Mobile Device Usage and User Behavior Data Set
+                        </a>.Mobile Device Usage and User Behavior Data Set
+                        this data includes demographic data such as gender and age. 
+                        It includes information about the users device such as the 
+                        operating system and device model. Data on their device use 
+                        was also collected such as number of apps installed, app usage 
+                        time (min/day), battery consumption (milliamp-hours/day), 
+                        screen on time (hours/day), and data usage (megabytes/day). 
+                        They also classified user behavior on a five number scale ranging 
+                        form light to extreme usage. This data is simulated, based on trends,
+                        not raw observed data.
+                        </p>
+                    "),
                  ),
         
         # using provided code
