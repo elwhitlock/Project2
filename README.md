@@ -1,9 +1,3 @@
----
-editor_options: 
-  markdown: 
-    wrap: 72
----
-
 This contains Elle Whitlock's Project 2 work for ST558 taught by Dr.
 Justin Post
 

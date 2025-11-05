@@ -478,5 +478,5 @@ server <- function(input, output, session) {
 }
 
 
-# Run the application 
+# Run the application, only need once but doesnt hurt 
 shinyApp(ui = ui, server = server)
