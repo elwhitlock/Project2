@@ -226,6 +226,8 @@ server <- function(input, output, session) {
   
   # DATA EXPLORATION
   
+  # plots
+  
   # # if statements to check type and ask for follow-up inputs
   # taglist() lets us return multiple UI elements
   # note this code only allows for one facet as per static code
@@ -273,7 +275,7 @@ server <- function(input, output, session) {
                     choices = c("None", cat_vars), selected = "None")
       )
       
-    # violin
+    # Hexbin
     } else if (input$plot_type == "Hexbin") {
       tagList(
         selectInput("hx_x", "X (numeric)", choices = num_vars),
@@ -293,19 +295,29 @@ server <- function(input, output, session) {
     
     # scatter
     if (input$plot_type == "Scatter") {
+      if (input$sc_color != "None"){
       ggplot(df, aes(x = .data[[input$sc_x]], y = .data[[input$sc_y]],
-                     color = if (input$sc_color != "None") .data[[input$sc_color]])) +
-        geom_point(alpha = 0.7) +
-        labs(x = input$sc_x, 
-             y = input$sc_y,
-             # custom title (will be used in plots below too)
-             title = paste0("Scatterplot of ", input$sc_y, " vs ", input$sc_x)) 
+                     color = .data[[input$sc_color]] )) +
+          geom_point() +
+          labs(x = input$sc_x, 
+               y = input$sc_y,
+               # custom title (will be used in plots below too)
+               title = paste0("Scatterplot of ", input$sc_y, " vs ", input$sc_x)) 
+      } 
+      else {
+        ggplot(df, aes(x = .data[[input$sc_x]], y = .data[[input$sc_y]])) + 
+          geom_point() +
+          labs(x = input$sc_x, 
+               y = input$sc_y,
+               # custom title (will be used in plots below too)
+               title = paste0("Scatterplot of ", input$sc_y, " vs ", input$sc_x)) 
+      }
       
     # box
     } else if (input$plot_type == "Box") {
       g <- ggplot(df, aes(x = .data[[input$bx_x]], y = .data[[input$bx_y]])) +
         geom_boxplot(aes(fill = .data[[input$bx_x]])) +
-        labs(x = input$bx_x, y = input$bx_y, title = paste0("Boxplot of ", input$bx_y, " by ", input$bx_x)) +
+        labs(x = input$bx_x, y = input$bx_y, title = paste0("Boxplot of ", input$bx_y, " by ", input$bx_x)) 
       if (input$bx_facet != "None"){
         # conditional for facet, will add it on if it exists, same for other plots that use it
         # as.formula means it is converts it from the past text string
@@ -318,10 +330,10 @@ server <- function(input, output, session) {
       g <- ggplot(df, aes(x = .data[[input$bar_x]])) +
         geom_bar(aes(fill = .data[[input$bar_x]])) +
         labs(x = input$bar_x, y = "Count", title = "Bar Chart") 
-      if (input$bar_fill != "None")
+      if (input$bar_fill != "None"){
         g <- ggplot(df, aes(x = .data[[input$bar_x]], fill = .data[[input$bar_fill]])) +
         geom_bar(position = "stack") +
-        labs(x = input$bar_x, y = "Count", title = paste0("Bar chart of ", input$bar_x))
+        labs(x = input$bar_x, y = "Count", title = paste0("Bar chart of ", input$bar_x))}
       g
       
     # density  
@@ -345,12 +357,15 @@ server <- function(input, output, session) {
       g <- ggplot(df, aes(x = .data[[input$hx_x]], y = .data[[input$hx_y]])) +
         geom_hex(bins = 25) +
         labs(x = input$hx_x, y = input$hx_y, title = paste0("Hexbin plot of ", input$hx_y, " vs ", input$hx_x)) 
-      if (input$vl_facet != "None"){
-      g <- g + facet_wrap(as.formula(paste("~", input$bx_facet)))
+      if (input$hx_facet != "None"){
+      g <- g + facet_wrap(as.formula(paste("~", input$hx_facet)))
       }
       g
     }
   })
+  
+  # summaries
+  
 
 }
 

@@ -41,7 +41,7 @@ colSums(is.na(mobile_data))
 
 # define numeric variables (note ID not included)
 num_vars <- names(mobile_data)[sapply(mobile_data, is.numeric)]
-num_vars <- setdiff(num_vars, "ID")  
+num_vars <- setdiff(num_vars, "user_id")  
 
 # define categorical variables
 cat_vars <- names(mobile_data)[sapply(mobile_data, is.factor)]
