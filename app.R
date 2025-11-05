@@ -63,7 +63,8 @@ ui <- fluidPage(
                         <p> This interactive Shiny app explores mobile device 
                         usage patterns. In the side panel you can subset the data by gender, 
                         operating system, and by modifying the range of values for any two
-                        numeric variables. However you must hit the button to update the data! 
+                        numeric variables. However you must hit the button to update the data!
+                        There is no data to start with otherwise.
                         In the download tab, the data can be downloaded in a csv format.
                         Finally in the exploration tab you can learn about the data. You
                         can choose between looking at plots, or summaries. The plots include
@@ -73,7 +74,7 @@ ui <- fluidPage(
                         categorical variables.
                         </p>
                         
-                        <img src='phone.jpg' width='45%'>
+                        <img src='phone.jpg' width='35%'>
                         
                         <h2>About the Data</h2>
                         <p> This app uses 
@@ -146,7 +147,7 @@ ui <- fluidPage(
   )
 )
 
-
+# define s
 server <- function(input, output, session) {
   
   # SIDEBAR
@@ -440,6 +441,7 @@ server <- function(input, output, session) {
     df <- mobile_data_new()
     
     # numeric summary
+    
     if (input$sum_type == "Numeric") {
        # grouped numeric summary
        if (input$sum_grp != "None") {
